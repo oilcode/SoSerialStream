@@ -1,4 +1,4 @@
-#include "SoSerialStream.h"
+﻿#include "SoSerialStream.h"
 #include <string.h>
 using namespace GGUI;
 
@@ -12,14 +12,14 @@ void main()
 	kStreamForWrite << (__int16)22333;
 	SoSerialStream::stStringForWrite kWriteString;
 	const char* pszStringForWrite = "JianSheWoMenDeJiaYuan";
-	kWriteString.szString = pszStringForWrite;
+	kWriteString.utf8String = pszStringForWrite;
 	kWriteString.nLength = strlen(pszStringForWrite);
 	kStreamForWrite << kWriteString;
-	kWriteString.szString = "";
+	kWriteString.utf8String = "";
 	kWriteString.nLength = 0;
 	kStreamForWrite << kWriteString;
 	kStreamForWrite << (__int32)4444;
-	kWriteString.szString = pszStringForWrite;
+	kWriteString.utf8String = pszStringForWrite;
 	kWriteString.nLength = strlen(pszStringForWrite);
 	kStreamForWrite << kWriteString;
 

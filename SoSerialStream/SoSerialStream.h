@@ -1,13 +1,12 @@
-//-----------------------------------------------------------------------------
+ï»¿//-----------------------------------------------------------------------------
 // SoSerialStream
 // (C) oil
 // 2013-07-25
-// ¶ÁĞ´ÄÚ´æÊı¾İÊ±ÓĞ´ó¶ËĞ¡¶ËµÄÎÊÌâ£¬ÉĞÎ´½â¾ö¡£
 //-----------------------------------------------------------------------------
 #ifndef _SoSerialStream_h_
 #define _SoSerialStream_h_
 //-----------------------------------------------------------------------------
-//»º´æÇø´óĞ¡£¬10M¡£
+//ç¼“å­˜åŒºå¤§å°ï¼Œ10Mã€‚
 #define SoSerialStream_BufferSize 10240000
 //-----------------------------------------------------------------------------
 namespace GGUI
@@ -24,35 +23,36 @@ namespace GGUI
 		enum eOperationResult
 		{
 			OpeResult_OK = 0,
-			OpeResult_WrongMode, //¶ÁĞ´Ä£Ê½²»Æ¥Åä¡£
-			OpeResult_Write_NotEnoughBuffer, //Ê£Óà»º´æÇø²»×ã£¬Ğ´ÈëÊ§°Ü¡£
-			OpeResult_Read_NotEnoughBuffer, //Ê£Óà»º´æÇø²»×ã£¬¶ÁÈ¡Ê§°Ü¡£
-			OpeResult_Read_StringNoZero, //¶ÁÈ¡Ò»¸ö×Ö·û´®Ê±£¬Ã»ÓĞÕÒµ½½áÊø·û¡£
+			OpeResult_WrongMode, //è¯»å†™æ¨¡å¼ä¸åŒ¹é…ã€‚
+			OpeResult_Write_NotEnoughBuffer, //å‰©ä½™ç¼“å­˜åŒºä¸è¶³ï¼Œå†™å…¥å¤±è´¥ã€‚
+			OpeResult_Read_NotEnoughBuffer, //å‰©ä½™ç¼“å­˜åŒºä¸è¶³ï¼Œè¯»å–å¤±è´¥ã€‚
+			OpeResult_Read_StringNoZero, //è¯»å–ä¸€ä¸ªå­—ç¬¦ä¸²æ—¶ï¼Œæ²¡æœ‰æ‰¾åˆ°ç»“æŸç¬¦ã€‚
 		};
 		struct stStringForWrite
 		{
-			const char* szString; //±ØĞëÊÇutf8×Ö·û´®¡£
-			__int32 nLength; //×Ö·û´®³¤¶È£¬µ¥Î»Byte£¬²»°üÀ¨½áÊø·û¡£
+			//å¦‚æœutf8Stringå€¼ä¸ºNULLï¼Œåˆ™å½“åšç©ºå­—ç¬¦ä¸²åšå¤„ç†ã€‚
+			const char* utf8String; //å¿…é¡»æ˜¯utf8å­—ç¬¦ä¸²ã€‚
+			__int32 nLength; //å­—ç¬¦ä¸²é•¿åº¦ï¼Œå•ä½Byteï¼Œä¸åŒ…æ‹¬ç»“æŸç¬¦ã€‚
 		};
 		struct stStringForRead
 		{
-			//×¢Òâ£¬szStringËùÖ¸ÏòµÄ×Ö·û´®£¬ÆäÄÚ´æÊÇÎ»ÓÚ±¾ÀàµÄm_pBufferÖĞ£¬
-			//Íâ½çÒªÂíÉÏ°ÑÕâ¸ö×Ö·û´®¿½±´µ½×Ô¼ºµÄÄÚ´æÀï¡£
-			char* szString; //±ØĞëÊÇutf8×Ö·û´®¡£
-			__int32 nLength; //×Ö·û´®³¤¶È£¬µ¥Î»Byte£¬²»°üÀ¨½áÊø·û¡£
+			//æ³¨æ„ï¼ŒszStringæ‰€æŒ‡å‘çš„å­—ç¬¦ä¸²ï¼Œå…¶å†…å­˜æ˜¯ä½äºæœ¬ç±»çš„m_pBufferä¸­ï¼Œ
+			//å¤–ç•Œè¦é©¬ä¸ŠæŠŠè¿™ä¸ªå­—ç¬¦ä¸²æ‹·è´åˆ°è‡ªå·±çš„å†…å­˜é‡Œã€‚
+			char* utf8String; //å¿…é¡»æ˜¯utf8å­—ç¬¦ä¸²ã€‚
+			__int32 nLength; //å­—ç¬¦ä¸²é•¿åº¦ï¼Œå•ä½Byteï¼Œä¸åŒ…æ‹¬ç»“æŸç¬¦ã€‚
 		};
 	public:
 		SoSerialStream();
 		~SoSerialStream();
 
-		//Ğ´²Ù×÷¡£
+		//å†™æ“ä½œã€‚
 		SoSerialStream& operator << (bool bValue);
-		SoSerialStream& operator << (char cValue); //char¼´Îª__int8
+		SoSerialStream& operator << (char cValue); //charå³ä¸º__int8
 		SoSerialStream& operator << (__int16 int16Value);
 		SoSerialStream& operator << (__int32 int32Value);
 		SoSerialStream& operator << (__int64 int64Value);
 		SoSerialStream& operator << (const stStringForWrite& szString);
-		//¶Á²Ù×÷¡£
+		//è¯»æ“ä½œã€‚
 		SoSerialStream& operator >> (bool& bValue);
 		SoSerialStream& operator >> (char& cValue);
 		SoSerialStream& operator >> (__int16& int16Value);
@@ -67,17 +67,27 @@ namespace GGUI
 		void ClearForWrite();
 		void ClearForRead();
 		void Fill(const char* pBuffer, __int32 nValidSize);
+		__int64 hton64(__int64 theValue);
+		__int64 ntoh64(__int64 theValue);
 
 	private:
-		//»º´æÇø¡£
+		//æœ¬æœºå­—èŠ‚åºä¸ç½‘ç»œå­—èŠ‚åºäº’ç›¸è½¬æ¢æ—¶ï¼Œç”¨äºè½¬æ¢64ä½æ•´æ•°ã€‚
+		struct stConvert64
+		{
+			__int32 a;
+			__int32 b;
+		};
+
+	private:
+		//ç¼“å­˜åŒºã€‚
 		char* m_pBuffer;
-		//ÓĞĞ§³¤¶È£¬µ¥Î»Byte¡£
+		//æœ‰æ•ˆé•¿åº¦ï¼Œå•ä½Byteã€‚
 		__int32 m_nSize;
-		//µ±Ç°¹â±êÎ»ÖÃ¡£´Ó0¿ªÊ¼¼ÆÊı¡£¶Á²Ù×÷ºÍĞ´²Ù×÷´Ó¹â±ê´¦¿ªÊ¼¡£
+		//å½“å‰å…‰æ ‡ä½ç½®ã€‚ä»0å¼€å§‹è®¡æ•°ã€‚è¯»æ“ä½œå’Œå†™æ“ä½œä»å…‰æ ‡å¤„å¼€å§‹ã€‚
 		__int32 m_nCursorPos;
-		//×î½üµÄÒ»´ÎÖ´ĞĞ¶ÁĞ´²Ù×÷µÄ½á¹û¡£
+		//æœ€è¿‘çš„ä¸€æ¬¡æ‰§è¡Œè¯»å†™æ“ä½œçš„ç»“æœã€‚
 		eOperationResult m_eLastOpeResult;
-		//¶ÁĞ´Ä£Ê½¡£
+		//è¯»å†™æ¨¡å¼ã€‚
 		eOperationMode m_eMode;
 	};
 	//-----------------------------------------------------------------------------
