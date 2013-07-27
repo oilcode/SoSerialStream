@@ -22,10 +22,12 @@ void main()
 	kWriteString.utf8String = pszStringForWrite;
 	kWriteString.nLength = strlen(pszStringForWrite);
 	kStreamForWrite << kWriteString;
+	kStreamForWrite.Compress();
 
 	SoSerialStream kStreamForRead;
 	kStreamForRead.ClearForRead();
-	kStreamForRead.Fill(kStreamForWrite.GetBuffer(), kStreamForWrite.GetSize());
+	kStreamForRead.FillDataForRead(kStreamForWrite.GetBufferAfterCompress(), kStreamForWrite.GetSizeAfterCompress());
+	kStreamForRead.Uncompress();
 	bool bValue;
 	char cValue;
 	__int64 int64Value;

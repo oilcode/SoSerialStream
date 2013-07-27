@@ -61,14 +61,20 @@ namespace GGUI
 		SoSerialStream& operator >> (stStringForRead& szString);
 
 		__int32 GetSize() const;
+		__int32 GetSizeAfterCompress() const;
 		eOperationResult GetLastOpeResult() const;
 		const char* GetBuffer() const;
+		const char* GetBufferAfterCompress() const;
 		void Clear();
 		void ClearForWrite();
 		void ClearForRead();
-		void Fill(const char* pBuffer, __int32 nValidSize);
+		//--pBuffer 是经过压缩后的数据。
+		void FillDataForRead(const char* pBuffer, __int32 nValidSize);
 		__int64 hton64(__int64 theValue);
 		__int64 ntoh64(__int64 theValue);
+		//压缩与解压缩
+		void Compress();
+		void Uncompress();
 
 	private:
 		//本机字节序与网络字节序互相转换时，用于转换64位整数。
@@ -81,8 +87,12 @@ namespace GGUI
 	private:
 		//缓存区。
 		char* m_pBuffer;
+		//用于执行压缩和解压缩的临时缓存区。
+		char* m_pBufferAfterCompress;
 		//有效长度，单位Byte。
 		__int32 m_nSize;
+		//压缩后的长度。
+		__int32 m_nSizeAfterCompress;
 		//当前光标位置。从0开始计数。读操作和写操作从光标处开始。
 		__int32 m_nCursorPos;
 		//最近的一次执行读写操作的结果。
@@ -96,6 +106,11 @@ namespace GGUI
 		return m_nSize;
 	}
 	//-----------------------------------------------------------------------------
+	inline __int32 SoSerialStream::GetSizeAfterCompress() const
+	{
+		return m_nSizeAfterCompress;
+	}
+	//-----------------------------------------------------------------------------
 	inline SoSerialStream::eOperationResult SoSerialStream::GetLastOpeResult() const
 	{
 		return m_eLastOpeResult;
@@ -106,9 +121,15 @@ namespace GGUI
 		return m_pBuffer;
 	}
 	//-----------------------------------------------------------------------------
+	inline const char* SoSerialStream::GetBufferAfterCompress() const
+	{
+		return m_pBufferAfterCompress;
+	}
+	//-----------------------------------------------------------------------------
 	inline void SoSerialStream::Clear()
 	{
 		m_nSize = 0;
+		m_nSizeAfterCompress = 0;
 		m_nCursorPos = 0;
 		m_eLastOpeResult = OpeResult_OK;
 		m_eMode = Mode_None;
@@ -117,6 +138,7 @@ namespace GGUI
 	inline void SoSerialStream::ClearForWrite()
 	{
 		m_nSize = 0;
+		m_nSizeAfterCompress = 0;
 		m_nCursorPos = 0;
 		m_eLastOpeResult = OpeResult_OK;
 		m_eMode = Mode_Write;
@@ -125,6 +147,7 @@ namespace GGUI
 	inline void SoSerialStream::ClearForRead()
 	{
 		m_nSize = 0;
+		m_nSizeAfterCompress = 0;
 		m_nCursorPos = 0;
 		m_eLastOpeResult = OpeResult_OK;
 		m_eMode = Mode_Read;
