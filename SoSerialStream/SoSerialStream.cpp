@@ -6,9 +6,15 @@
 // 1，已经对本机字节序和网络字节序做了相互转换。本类内部实现了64位整数的相互转换。
 // 2，字节序转换函数使用了winsock函数，所以要依赖Ws2_32.lib。
 // 3，写字符串和读字符串时，字符串都是UTF8格式。
+//    为什么不能使用wchar_t字符？
+//    因为那样需要对每个字符做本机字节序和网络字节序的转换操作。
 // 4，读字符串后，stStringForRead::utf8String指向的字符串内存是位于本类的m_pBuffer中，
 //    外界要马上把这个字符串拷贝到自己的内存里。
 // 5，加入了压缩功能，使用ZLIB。
+// 6，不支持写入和读取一个数据块。
+//    因为不能对数据块内的变量做本机字节序和网络字节序的转换。例如，数据块内有一个
+//    __int32变量，如果做数据块的内存拷贝，这个__int32变量是没有经过字节序转换的。
+// 7，没有加密功能。
 //-----------------------------------------------------------------------------
 #include <Windows.h>
 #include "SoSerialStream.h"
@@ -174,8 +180,10 @@ namespace GGUI
 		}
 		else
 		{
-			memcpy(m_pBuffer+m_nCursorPos, szString.utf8String, szString.nLength+1);
-			m_nCursorPos += szString.nLength + 1;
+			memcpy(m_pBuffer+m_nCursorPos, szString.utf8String, szString.nLength);
+			m_nCursorPos += szString.nLength;
+			m_pBuffer[m_nCursorPos] = 0;
+			m_nCursorPos += 1;
 		}
 		if (m_nSize < m_nCursorPos)
 		{
@@ -321,10 +329,67 @@ namespace GGUI
 		}
 	}
 	//-----------------------------------------------------------------------------
-	void SoSerialStream::FillDataForRead(const char* pBuffer, __int32 nValidSize)
+	void SoSerialStream::FillCompressedData(const char* pCompressedData, __int32 nValidSize)
 	{
-		memcpy(m_pBufferAfterCompress, pBuffer, nValidSize);
+		if (pCompressedData == 0 || nValidSize <= 0 || nValidSize > SoSerialStream_BufferSize)
+		{
+			m_eLastOpeResult = OpeResult_InvalidParam;
+			return;
+		}
+		memcpy(m_pBufferAfterCompress, pCompressedData, nValidSize);
 		m_nSizeAfterCompress = nValidSize;
+		m_eLastOpeResult = OpeResult_OK;
+	}
+	//-----------------------------------------------------------------------------
+	void SoSerialStream::Compress()
+	{
+		m_nSizeAfterCompress = -1; //置为无效值。
+		uLongf nSizeAfterCompress = SoSerialStream_BufferSize;
+		int nResult = compress((Bytef*)m_pBufferAfterCompress, &nSizeAfterCompress, (Bytef*)m_pBuffer, m_nSize);
+		if (nResult == Z_OK)
+		{
+			//成功。
+			m_nSizeAfterCompress = (__int32)nSizeAfterCompress;
+			m_eLastOpeResult = OpeResult_OK;
+		}
+		else if (nResult == Z_BUF_ERROR)
+		{
+			//输出缓存区不够大。
+			m_eLastOpeResult = OpeResult_ZLIB_BufError;
+		}
+		else if (nResult == Z_MEM_ERROR)
+		{
+			//内存不足。
+			m_eLastOpeResult = OpeResult_ZLIB_MemError;
+		}
+	}
+	//-----------------------------------------------------------------------------
+	void SoSerialStream::Uncompress()
+	{
+		m_nSize = -1; //置为无效值。
+		uLongf nSizeAfterUncompress = SoSerialStream_BufferSize;
+		int nResult = uncompress((Bytef*)m_pBuffer, &nSizeAfterUncompress, (Bytef*)m_pBufferAfterCompress, m_nSizeAfterCompress);
+		if (nResult == Z_OK)
+		{
+			//成功。
+			m_nSize = (__int32)nSizeAfterUncompress;
+			m_eLastOpeResult = OpeResult_OK;
+		}
+		else if (nResult == Z_BUF_ERROR)
+		{
+			//输出缓存区不够大。
+			m_eLastOpeResult = OpeResult_ZLIB_BufError;
+		}
+		else if (nResult == Z_DATA_ERROR)
+		{
+			//输入的数据有误。
+			m_eLastOpeResult = OpeResult_ZLIB_DataError;
+		}
+		else if (nResult == Z_MEM_ERROR)
+		{
+			//内存不足。
+			m_eLastOpeResult = OpeResult_ZLIB_MemError;
+		}
 	}
 	//-----------------------------------------------------------------------------
 	__int64 SoSerialStream::hton64(__int64 theValue)
@@ -345,55 +410,6 @@ namespace GGUI
 		pDestValue->a = ntohl(pSrcValue->a);
 		pDestValue->b = ntohl(pSrcValue->b);
 		return theResult;
-	}
-	//-----------------------------------------------------------------------------
-	void SoSerialStream::Compress()
-	{
-		m_nSizeAfterCompress = -1; //置为无效值。
-		uLongf nSizeAfterCompress = SoSerialStream_BufferSize;
-		int nResult = compress((Bytef*)m_pBufferAfterCompress, &nSizeAfterCompress, (Bytef*)m_pBuffer, m_nSize);
-		if (nResult == Z_OK)
-		{
-			//成功。
-			m_nSizeAfterCompress = (__int32)nSizeAfterCompress;
-		}
-		else if (nResult == Z_BUF_ERROR)
-		{
-			//输出缓存区不够大。
-			//未做处理。
-		}
-		else if (nResult == Z_MEM_ERROR)
-		{
-			//内存不足。
-			//未做处理。
-		}
-	}
-	//-----------------------------------------------------------------------------
-	void SoSerialStream::Uncompress()
-	{
-		m_nSize = -1; //置为无效值。
-		uLongf nSizeAfterUncompress = SoSerialStream_BufferSize;
-		int nResult = uncompress((Bytef*)m_pBuffer, &nSizeAfterUncompress, (Bytef*)m_pBufferAfterCompress, m_nSizeAfterCompress);
-		if (nResult == Z_OK)
-		{
-			//成功。
-			m_nSize = (__int32)nSizeAfterUncompress;
-		}
-		else if (nResult == Z_BUF_ERROR)
-		{
-			//输出缓存区不够大。
-			//未做处理。
-		}
-		else if (nResult == Z_DATA_ERROR)
-		{
-			//输入的数据有误。
-			//未做处理。
-		}
-		else if (nResult == Z_MEM_ERROR)
-		{
-			//内存不足。
-			//未做处理。
-		}
 	}
 } //namespace GGUI
 //-----------------------------------------------------------------------------

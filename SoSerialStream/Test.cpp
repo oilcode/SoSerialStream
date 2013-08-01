@@ -13,7 +13,7 @@ void main()
 	SoSerialStream::stStringForWrite kWriteString;
 	const char* pszStringForWrite = "JianSheWoMenDeJiaYuan";
 	kWriteString.utf8String = pszStringForWrite;
-	kWriteString.nLength = strlen(pszStringForWrite);
+	kWriteString.nLength = 10; //strlen(pszStringForWrite);
 	kStreamForWrite << kWriteString;
 	kWriteString.utf8String = "";
 	kWriteString.nLength = 0;
@@ -26,7 +26,7 @@ void main()
 
 	SoSerialStream kStreamForRead;
 	kStreamForRead.ClearForRead();
-	kStreamForRead.FillDataForRead(kStreamForWrite.GetBufferAfterCompress(), kStreamForWrite.GetSizeAfterCompress());
+	kStreamForRead.FillCompressedData(kStreamForWrite.GetBufferAfterCompress(), kStreamForWrite.GetSizeAfterCompress());
 	kStreamForRead.Uncompress();
 	bool bValue;
 	char cValue;
